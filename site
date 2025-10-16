@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Minimal Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0b1220;          /* page bg */
+      --text: #e8ecf1;        /* main text */
+      --muted: #9aa8b6;       /* secondary text */
+      --card: #101a2e;        /* cards */
+      --accent: #84a9ff;      /* accents */
+      --border: #24324b;      /* borders */
+      --ring: rgba(132,169,255,.35);
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f7f9fc; --text:#0d1625; --muted:#556276; --card:#ffffff; --accent:#335dff; --border:#e5eaf1; --ring:rgba(51,93,255,.25);} 
+      body{ background: radial-gradient(1000px 600px at 20% -10%, #fff, #f2f5fb 60%, #eaf0ff 100%);} 
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      color:var(--text); background: radial-gradient(1000px 600px at 20% -10%, #081124, var(--bg));
+      line-height:1.5; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    .container{ max-width:1000px; margin:0 auto; padding:28px 20px 64px; }
+
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:24px; }
+    .brand{ display:flex; gap:10px; align-items:center; font-weight:800; letter-spacing:.2px; }
+    .badge{ padding:4px 10px; border:1px solid var(--border); color:var(--muted); border-radius:999px; font-size:12px; }
+
+    .hero{
+      display:grid; gap:10px; margin-bottom:22px; 
+    }
+    .hero h1{ font-size:clamp(28px, 4vw, 40px); margin:0; letter-spacing:.2px; }
+    .hero p{ margin:0; color:var(--muted); }
+
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:0 6px 24px rgba(0,0,0,.18); }
+
+    /* Uploader */
+    .uploader{ padding:18px; }
+    .drop{ cursor:pointer; user-select:none; display:grid; place-items:center; text-align:center; 
+           border:1.5px dashed var(--border); border-radius:14px; padding:28px; transition:all .2s ease; background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)); }
+    .drop:hover{ border-color:var(--accent); box-shadow:0 0 0 6px var(--ring); }
+    .drop.is-dragover{ border-color:var(--accent); background:linear-gradient(180deg, rgba(132,169,255,.10), rgba(132,169,255,.04)); box-shadow:0 0 0 8px var(--ring); }
+
+    .drop h3{ margin:0 0 6px; font-size:18px; }
+    .drop p{ margin:0; color:var(--muted); font-size:14px; }
+
+    .controls{ display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+    .btn{ appearance:none; border:1px solid var(--border); background:transparent; color:var(--text); padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer; transition:all .2s; }
+    .btn:hover{ border-color:var(--accent); box-shadow:0 0 0 4px var(--ring); }
+
+    input[type="file"]{ display:none }
+
+    /* Gallery */
+    .gallery{ margin-top:18px; padding:16px; }
+    .grid{ display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .tile{ position:relative; overflow:hidden; border-radius:14px; border:1px solid var(--border); background:#000; }
+    .tile img{ width:100%; height:100%; object-fit:cover; aspect-ratio: 1 / 1; display:block; }
+    .tile .meta{ position:absolute; left:10px; bottom:10px; right:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .name{ font-size:12px; padding:6px 10px; border-radius:999px; background:rgba(0,0,0,.45); color:#f6f7fb; backdrop-filter:saturate(140%) blur(6px); max-width:75%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:1px solid rgba(255,255,255,.15); }
+    .remove{ border:none; cursor:pointer; border-radius:10px; padding:6px 10px; font-size:12px; font-weight:700; background:rgba(255,72,66,.15); color:#ffdad7; border:1px solid rgba(255,72,66,.35); }
+    .remove:hover{ filter:brightness(1.1); }
+
+    footer{ margin-top:26px; color:var(--muted); font-size:13px; text-align:center; }
+    .hint{ color:var(--muted); font-size:12px; margin-top:8px; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">📷 My Gallery</div>
+      <span class="badge">Client‑side only</span>
+    </header>
+
+    <section class="hero">
+      <h1>Drop your images here</h1>
+      <p>Modern, minimal gallery with drag‑and‑drop and instant previews. Nothing leaves your browser.</p>
+    </section>
+
+    <section class="card uploader" aria-label="Image uploader">
+      <div id="drop" class="drop" role="button" tabindex="0" aria-describedby="drop-help">
+        <h3>Drag & drop images</h3>
+        <p id="drop-help">…or click to choose files (JPG, PNG, GIF, WEBP). Multiple files supported.</p>
+        <div class="controls">
+          <button id="choose" class="btn" type="button" aria-label="Choose images">Choose images</button>
+          <button id="clear" class="btn" type="button" aria-label="Clear all">Clear all</button>
+        </div>
+        <input id="fileInput" type="file" accept="image/*" multiple />
+      </div>
+    </section>
+
+    <section class="card gallery" aria-live="polite">
+      <div id="grid" class="grid" aria-label="Image gallery"></div>
+    </section>
+
+    <p class="hint">Tip: You can also paste an image (Ctrl/Cmd + V).</p>
+
+    <footer>
+      Built with plain HTML, CSS, and JS. Your images are not uploaded anywhere.
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      const drop = document.getElementById('drop');
+      const fileInput = document.getElementById('fileInput');
+      const grid = document.getElementById('grid');
+      const chooseBtn = document.getElementById('choose');
+      const clearBtn = document.getElementById('clear');
+
+      let objectURLs = new Set();
+
+      function preventDefaults(e){ e.preventDefault(); e.stopPropagation(); }
+
+      ['dragenter','dragover','dragleave','drop'].forEach(eventName => {
+        drop.addEventListener(eventName, preventDefaults, false);
+      });
+
+      ['dragenter','dragover'].forEach(eventName => {
+        drop.addEventListener(eventName, () => drop.classList.add('is-dragover'), false);
+      });
+
+      ['dragleave','drop'].forEach(eventName => {
+        drop.addEventListener(eventName, () => drop.classList.remove('is-dragover'), false);
+      });
+
+      drop.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files; // FileList
+        handleFiles(files);
+      });
+
+      drop.addEventListener('click', () => fileInput.click());
+      drop.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); }
+      });
+
+      chooseBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+      clearBtn.addEventListener('click', () => { clearGallery(); });
+
+      // Paste from clipboard (images only)
+      document.addEventListener('paste', (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if(!items) return;
+        const files = [];
+        for(const item of items){ if(item.type && item.type.startsWith('image/')){ const f = item.getAsFile(); if(f) files.push(f); } }
+        if(files.length) handleFiles(files);
+      });
+
+      function handleFiles(fileList){
+        const files = Array.from(fileList).filter(f => f.type && f.type.startsWith('image/'));
+        files.forEach(file => addImageTile(file));
+      }
+
+      function addImageTile(file){
+        const url = URL.createObjectURL(file); // blob URL for fast preview
+        objectURLs.add(url);
+
+        const tile = document.createElement('figure');
+        tile.className = 'tile';
+
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = file.name || 'Image';
+        tile.appendChild(img);
+
+        const meta = document.createElement('figcaption');
+        meta.className = 'meta';
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.title = file.name;
+        name.textContent = file.name || 'image';
+
+        const remove = document.createElement('button');
+        remove.className = 'remove';
+        remove.type = 'button';
+        remove.setAttribute('aria-label', `Remove ${file.name}`);
+        remove.textContent = 'Remove';
+        remove.addEventListener('click', () => { URL.revokeObjectURL(url); objectURLs.delete(url); tile.remove(); });
+
+        meta.appendChild(name);
+        meta.appendChild(remove);
+        tile.appendChild(meta);
+        grid.prepend(tile);
+      }
+
+      function clearGallery(){
+        for(const url of objectURLs){ URL.revokeObjectURL(url); }
+        objectURLs.clear();
+        grid.innerHTML = '';
+      }
+
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => { for(const url of objectURLs){ URL.revokeObjectURL(url); } });
+    })();
+  </script>
+</body>
+</html>
